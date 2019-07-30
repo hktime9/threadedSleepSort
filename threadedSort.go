@@ -13,19 +13,24 @@ import (
 
  func threadedSort(array []int)(sorted []int){
  	start:= make(chan bool)
+ 	startInsideLoop:= make(chan bool)
 	var mutex = &sync.Mutex{}
 	index:= 0
 	sortedArray:= make([]int,len(array))
  	for i := 0; i < len(array); i++ {
  		go func(){
- 			fmt.Println("in")
- 			<-start
- 			delayMilliSec(array[i])
+ 			currNum:=array[i]
+ 			<-startInsideLoop
+ 			delayMilliSec(currNum*10)
  			mutex.Lock()
- 			sortedArray[index]= array[i]
+ 			sortedArray[index]= currNum
  			index++
+ 			if(index == len(array)){
+ 				<-start
+ 			}
  			mutex.Unlock()
  		}()
+ 		startInsideLoop<-true
  	}
  	start<-true
  	return sortedArray
@@ -41,8 +46,8 @@ import (
  }
 
 func main(){
-	array:= makeRandomArray(2,100)
-	fmt.Println(array)
+	array:= makeRandomArray(300,10)
+	fmt.Println("Random Array:",array)
 	sorted:= threadedSort(array)
-	fmt.Println(sorted)
+	fmt.Println("Sorted Array:",sorted)
 }
